@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
+    <title>키워드 입력 장소 검색</title>
+    <script type="text/javascript"
+        src="//dapi.kakao.com/v2/maps/sdk.js?appkey=b9780be3749cba574e29987317cebdc4&libraries=services,clusterer,drawing"></script>
+    <style>
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+        }
+
+        #map-container {
+            width: 1200px;
+            height: 600px;
+            margin: auto;
+            display: flex;
+            border: 1px solid #0000;
+            margin-top: 50px;
+        }
+
+        #map {
+            width: 500px;
+            height: 500px;
+            border-right: 1px solid #0000;
+        }
+
+        #search-container {
+            width: 500px;
+            height: 500px;
+            padding: 20px;
+            box-sizing: border-box;
+            background-color: #f4f4f4;
+        }
+
+        #keyword {
+            width: 60%;
+            padding: 10px;
+            font-size: 15px;
+        }
+
+        #search-btn {
+            width: 30%;
+            padding: 10px;
+            font-size: 13px;
+            background-color: rgb(255, 234, 0);
+            color: #000000;
+            cursor: pointer;
+        }
+
+        #search-result {
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 2px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .item:hover {
+            background-color: #f0f0f0;
+        }
+
+        .marker {
+            width: 20px;
+            height: 20px;
+            background-color: #ffff00;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .info {
+            font-size: 16px;
+        }
+
+        .marker-info-box {
+            padding: 10px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #00000000;
+        }
+    </style>
+
+<body>
+
+    <div id="map-container">
+        <div id="map"></div>
+        <script>
+            var infowindow = new kakao.maps.InfoWindow({ zIndex: 1 });
+
+            var mapContainer = document.getElementById('map'),
+                mapOption = {
+                    center: new kakao.maps.LatLng(37.566826, 126.9786567),
+                    level: 3
+                };
+
+            var map = new kakao.maps.Map(mapContainer, mapOption);
+            map.addOverlayMapTypeId(kakao.maps.MapTypeId.TRAFFIC);
+
+            function displayMarker(place) {
+
+                var marker = new kakao.maps.Marker({
+                    map: map,
+                    position: new kakao.maps.LatLng(place.y, place.x)
+                });
+
+                kakao.maps.event.addListener(marker, 'click', function () {
+                    infowindow.setContent('<div style="padding:5px;font-size:12px;">' + place.place_name + '</div>');
+                    infowindow.open(map, marker);
+                });
+            }
+        </script>
+        <div id="search-container">
+            <input type="text" id="keyword" placeholder="검색어 입력">
+            <button id="search-btn" onclick="searchPlaces()">검색</button>
+            <div id="search-result"></div>
+            <script>
+                var ps = new kakao.maps.services.Places();
+                function searchPlaces() {
+                    var keyword = document.getElementById('keyword').value;
+
+                    if (!keyword.replace(/^\s+|\s+$/g, '')) {
+                        alert('키워드를 입력해주세요!');
+                        return false;
+                    }
+
+                    ps.keywordSearch(keyword, placesSearchCB);
+                }
+
+                function placesSearchCB(data, status, pagination) {
+                    var searchResultList = document.getElementById('search-result');
+
+                    if (status === kakao.maps.services.Status.OK) {
+                        var bounds = new kakao.maps.LatLngBounds();
+
+                        searchResultList.innerHTML = '';
+
+                        for (var i = 0; i < data.length; i++) {
+                            displayMarker(data[i]);
+                            addToSearchResultList(data[i], i + 1);
+                            bounds.extend(new kakao.maps.LatLng(data[i].y, data[i].x));
+                        }
+
+                        map.setBounds(bounds);
+                    } else if (status === kakao.maps.services.Status.ZERO_RESULT) {
+                        alert('검색 결과가 존재하지 않습니다.');
+                    } else if (status === kakao.maps.services.Status.ERROR) {
+                        alert('검색 결과 중 오류가 발생했습니다.');
+                    }
+                }
+
+                function addToSearchResultList(place, index) {
+                    var searchResultList = document.getElementById('search-result');
+
+                    var item = document.createElement('div');
+                    item.className = 'item';
+                    item.onclick = function () {
+                        moveToPlace(place);
+                    };
+
+                    var marker = document.createElement('div');
+                    marker.className = 'marker';
+                    marker.innerText = index;
+
+                    var info = document.createElement('div');
+                    info.className = 'info';
+                    info.innerText = place.place_name;
+
+                    item.appendChild(marker);
+                    item.appendChild(info);
+
+                    searchResultList.appendChild(item);
+                }
+                function moveToPlace(place) {
+                    var moveLatLng = new kakao.maps.LatLng(place.y, place.x);
+                    map.setCenter(moveLatLng);
+                }
+            </script>
+        </div>
+    </div>
+</body>
+
+</html>

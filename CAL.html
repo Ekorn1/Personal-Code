@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>calendar</title>
+    <script type="text/javascript"
+        src="//dapi.kakao.com/v2/maps/sdk.js?appkey=b9780be3749cba574e29987317cebdc4&libraries=services,clusterer,drawing"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+    <link rel="icon" href="./favicon.png">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            width: 100%;
+
+        }
+
+        .button_wrap {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+        }
+
+        .button_wrap button {
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .wrap {
+            font-size: 30px;
+        }
+
+        .date-month th {
+            margin: 100px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            padding-top: 100px;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+
+        .close {
+            color: #aaaaaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        #myBtn1,
+        #myBtn2 {
+            position: absolute;
+            /* 버튼의 위치를 설정합니다. */
+            top: 50px;
+            /* 위에서부터의 거리를 조정 */
+        }
+
+        .trip-dates {
+            position: absolute;
+            top: 10px;
+        }
+
+        /* 예산 CSS */
+        .budget-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .budget-modal .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.6);
+            width: 100%;
+            height: 100%;
+            position: absolute;
+        }
+
+        .budget-modal .modal-content {
+            background-color: white;
+            padding: 20px 10px;
+            text-align: center;
+            position: relative;
+            border-radius: 10px;
+            width: 45%;
+            height: 80%;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
+        }
+
+        /* HEADER */
+
+        .budget-modal .modal-content .modal-content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #ccc;
+            /* 섹션과의 구분선을 추가 */
+            padding-bottom: 10px;
+            /* 구분선과 헤더 사이의 간격 조절 */
+        }
+
+        .budget-modal .modal-content .modal-content-header h2 {
+            text-align: center;
+            margin: 0 auto;
+        }
+
+        .budget-modal .material-icons {
+            cursor: pointer;
+        }
+
+
+ 
+
+        .budget-modal .modal-content-section {
+            height: 150px;
+      
+            border-bottom: 1px solid #ccc;
+            font-size: 16px;
+
+        }
+
+        .budget-modal .modal-content-section .budget {
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .budget-modal .modal-content-section .expense {
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .budget-modal .modal-content-section .left {
+            margin-top: 10px;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+
+
+        .fixedExpense input {
+            text-align: center;
+        }
+
+
+        .expectedExpense {
+            padding-right: 25px;
+        }
+
+        .expectedExpense input {
+            text-align: center;
+        }
+
+        header {
+            background-color: #FFD1E9;
+            color: #240214;
+            text-align: center;
+            padding: 10px;
+        }
+
+        main {
+            max-width: 1000px;
+            margin: 20px auto;
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        button {
+            background-color: #FFD1E9;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    
+    <div class="wrap">
+        <div class="date-month">
+            <span id="month-this">2023 Calendar 11월</span>
+        </div>
+        <div class="button_wrap">
+            <button type="button" id="month-prev" class="month-move" data-ym="2023-11-01">
+                < </button>
+                    <button type="button" id="month-next" class="month-move" data-ym="2023-12-01"> > </button>
+        </div>
+        <table class="date-month">
+            <thead>
+                <tr>
+                    <th>일</th>
+                    <th>월</th>
+                    <th>화</th>
+                    <th>수</th>
+                    <th>목</th>
+                    <th>금</th>
+                    <th>토</th>
+                </tr>
+            </thead>
+            <tbody id="Month-Calendar">
+                <tr>
+                    <td class="sun"><a>1</a></td>
+                    <td class=""><a>2</a></td>
+                    <td class=""><a>3</a></td>
+                    <td class=""><a>4</a></td>
+                    <td class=""><a>5</a></td>
+                    <td class=""><a>6</a></td>
+                    <td class="sat"><a>7</a></td>
+                </tr>
+                <tr>
+                    <td class="sun"><a>8</a></td>
+                    <td class=""><a>9</a></td>
+                    <td class=""><a>10</a></td>
+                    <td class=""><a>11</a></td>
+                    <td class=""><a>12</a></td>
+                    <td class="sat"><a>13</a></td>
+                </tr>
+                <tr>
+                    <td class="sun"><a>15</a></td>
+                    <td class=""><a>16</a></td>
+                    <td class=""><a>17</a></td>
+                    <td class=""><a>18</a></td>
+                    <td class=""><a>19</a></td>
+                    <td class="sat"><a>20</a></td>
+                </tr>
+                <tr>
+                    <td class="sun"><a>22</a></td>
+                    <td class=""><a>23</a></td>
+                    <td class=""><a>24</a></td>
+                    <td class=""><a>25</a></td>
+                    <td class=""><a>26</a></td>
+                    <td class="sat"><a>27</a></td>
+                </tr>
+                <tr>
+                    <td class="sun"><a>29</a></td>
+                    <td class=""><a>30</a></td>
+                    <td class=""><a>31</a></td>
+                    <td class=""><a>1</a></td>
+                    <td class=""><a>2</a></td>
+                    <td class="sat"><a>3</a></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <button id="Btn">일정</button>
+    <button id="Btn2">예산</button>
+    <div id="Modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <textarea id="inputField" rows="4" cols="50"></textarea>
+            <button id="saveBtn">저장</button>
+            <p>여기에 원하는 내용을 넣어주세요.</p>
+        </div>
+    </div>
+
+    <div class="budget-modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-content-header">
+                <h2 class="title">여행 가계부</h2>
+                <div class="material-icons">close</div>
+            </div>
+            <div class="modal-content-section">
+                <div class="budget">예산
+                    <span class="budget-input"></span>
+                </div>
+                <div class="expense">총 지출
+                    <span class="expense-result"></span>
+                </div>
+                <div class="left">남은 예산
+                    <span class="left-result"></span>
+                </div>
+            </div>
+            <div class="expenseBtn">
+                <button class="fixedExpenseBtn">고정지출</button>
+                <button class="expectedExpenseBtn">예상지출</button>
+            </div>
+            <div class="expenseContent"></div>
+        </div>
+    </div>
+
+
+
+    <script>
+ 
+        function prevMonth(date) {
+            let target = new Date(date);
+            target.setDate(1);
+            target.setMonth(target.getMonth() - 1);
+            return getYmd(target);
+        }
+   
+        function nextMonth(date) {
+            let target = new Date(date);
+            target.setDate(1);
+            target.setMonth(target.getMonth() + 1);
+            return getYmd(target);
+        }
+      
+        function getYmd(target) {
+            let month = ('0' + (target.getMonth() + 1)).slice(-2);
+            return [target.getFullYear(), month, '01'].join('-');
+        }
+    
+        function fullDays(date) {
+            let target = new Date(date);
+            let year = target.getFullYear();
+            let month = target.getMonth();
+          
+            let firstWeekDay = new Date(year, month, 1).getDay();
+            let thisDays = new Date(year, month + 1, 0).getDate();
+
+            let slot = [28, 35, 42].filter(n => n >= (firstWeekDay + thisDays)).shift();
+            let days = [];
+            
+            for (let i = 0; i < slot; i++) {
+                days[i] = {
+                    date: '',
+                    dayNum: '',
+                    today: false
+                };
+            }
+            
+            let now = new Date();
+            let today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            let courrentDate;
+            
+            for (let index = 0, i = 1; i <= thisDays; index++, i++) {
+                courrentDate = new Date(year, month, i);
+                days[index + firstWeekDay] = {
+                    date: i,
+                    dayNum: courrentDate.getDay(),
+                    today: (courrentDate.getTime() === today.getTime())
+                };
+            }
+
+            return days;
+        }
+
+        function drawMonth(date) {
+            document.getElementById('month-this').innerText = date.substring(0, 7).replace('-', '.');
+            document.getElementById('month-prev').dataset.ym = prevMonth(date);
+            document.getElementById('month-next').dataset.ym = nextMonth(date);
+
+            let tblMonth = document.getElementById('Month-Calendar');
+            tblMonth.innerHTML = '';
+
+            let td = '<td class="__REST__ __TODAY__"><a __HREF__>__DATE__</a></td>';
+          
+            let BeginEvent;
+            let dayClase;
+            let week = null;
+            let days = fullDays(date);
+
+            for (let i = 0, length = days.length; i < length; i += 7) {
+                week = days.slice(i, i + 7);
+                let tr = document.createElement('tr');
+
+                week.forEach(function (obj, index) {
+                    Event = (index === 3);
+                    dayClase = (index === 0) ? 'sun' : (index === 6) ? 'sat' : '';
+            
+
+                    let cell = td.replace('__REST__', dayClase)
+                        .replace('__TODAY__', (obj.today) ? 'today' : '')
+
+                       
+                        .replace('__DATE__', obj.date);
+
+                    tr.innerHTML += cell;
+                });
+
+                tblMonth.appendChild(tr);
+            }
+        }
+
+     
+        document.querySelector('.material-icons').addEventListener('click', function () {
+            budgetModal.style.display = 'none';
+        });
+
+
+        span.onclick = function () {
+            modal.style.display = "none";
+        }
+
+        window.onclick = function (event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+
+        saveBtn.onclick = function () {
+            console.log(inputField.value);
+            modal.style.display = "none";
+        }
+        
+let startPrompt = prompt("여행 시작 날짜를 입력해주세요. (예: 2023-12-01)", "");
+let endPrompt = prompt("여행 종료 날짜를 입력해주세요. (예: 2023-12-31)", "");
+let startDate, endDate;
+
+if (startPrompt && endPrompt) {
+    startDate = new Date(startPrompt);
+    startDate.setHours(0, 0, 0, 0);
+    endDate = new Date(endPrompt);
+    endDate.setHours(0, 0, 0, 0);
+}
+
+window.onload = function () {
+    let date = (new Date()).toISOString().substring(0, 10);
+    drawMonth(date);
+
+    document.querySelectorAll('.month-move').forEach(function (button) {
+        button.addEventListener('click', function () {
+            date = this.dataset.ym;
+            drawMonth(date);
+            highlightDates();
+        });
+    });
+
+    function highlightDates() {
+       
+        if (startDate && endDate) {
+            document.querySelectorAll('#Month-Calendar td').forEach(function (cell) {
+                if (!isNaN(cell.innerText)) {
+                    let cellYear = parseInt(date.split('-')[0]);
+                    let cellMonth = parseInt(date.split('-')[1]) - 1;
+                    let cellDate = new Date(cellYear, cellMonth, cell.innerText);
+                    cellDate.setHours(0, 0, 0, 0); 
+                    if (cellDate >= startDate && cellDate <= endDate) {
+                        cell.style.backgroundColor = 'yellow';
+                    }
+                }
+            });
+        }
+    }
+
+    highlightDates(); 
+};
+
+    </script>
+</body>
+
+</html>

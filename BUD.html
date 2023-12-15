@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/main.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+    <link rel="icon" href="./favicon.png">
+    <script defer src="./main.js"></script>
+
+    <title>여행 가계부</title>
+</head>
+
+<body>
+    <div class="budget-modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-content-header">
+                <h2 class="title">여행 가계부</h2>
+                <div class="material-icons">close</div>
+            </div>
+            <div class="modal-content-section">
+                <div class="budget">예산
+                    <span class="budget-input"></span>
+                </div>
+                <div class="expense">총 지출
+                    <span class="expense-result"></span>
+                </div>
+                <div class="left">남은 예산
+                    <span class="left-result"></span>
+                </div>
+            </div>
+            <div class="expenseBtn">
+                <button class="fixedExpenseBtn">고정지출</button>
+                <button class="expectedExpenseBtn">예상지출</button>
+            </div>
+            <div class="expenseContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const bgInput = Number(prompt('총 예산을 입력해주세요!'));
+        const $budgetInput = document.querySelector('.budget-input');
+        const $expenseResult = document.querySelector('.expense-result');
+        const $leftResult = document.querySelector('.left-result');
+        const $fixedExpenseBtn = document.querySelector('.fixedExpenseBtn');
+        const $expectedExpenseBtn = document.querySelector('.expectedExpenseBtn');
+        const $expenseContent = document.querySelector('.expenseContent');
+
+        if (bgInput >= 1) {
+            $budgetInput.textContent = bgInput;
+        } else if (bgInput <= 0) {
+            alert('1 이상의 숫자를 입력해주세요!');
+        } else {
+            alert('숫자만 입력해주세요!')
+        }
+
+        function calculateTotalExpense() {
+        const fixedExpenses = document.querySelectorAll('.fixedExpenseInput');
+
+        const checkboxes = document.querySelectorAll('.expectedCheckBox');
+        const costInputs = document.querySelectorAll('.expectedCostInput');
+
+        const checkedCostValues = [];
+
+        checkboxes.forEach((checkbox, index) => {
+            if (checkbox.checked) {
+                const costValue = costInputs[index].value;
+                checkedCostValues.push(costValue);
+            }
+        });
+
+            let totalExpense = 0;
+
+            fixedExpenses.forEach(input => {
+                totalExpense += Number(input.value);
+            });
+
+            checkedCostValues.forEach(cost => {
+                totalExpense += Number(cost);
+            });
+
+            $expenseResult.textContent = totalExpense;
+            $leftResult.textContent = bgInput - totalExpense;
+        }
+
+        $fixedExpenseBtn.addEventListener('click', function () {
+            const div = document.createElement('div');
+            div.className = "fixedExpense";
+            div.innerHTML =
+                `<div>
+                    <input type='text' placeholder='고정 지출 내용 입력'>
+                    <input class="fixedExpenseInput" type='number' placeholder='고정 비용을 입력'>
+                </div>`;
+            $expenseContent.appendChild(div);
+
+            
+            const fixedExpenseInputs = div.querySelectorAll('.fixedExpenseInput');
+            fixedExpenseInputs.forEach(input => {
+                input.addEventListener('change', calculateTotalExpense);
+            });
+
+        })
+
+        $expectedExpenseBtn.addEventListener('click', function () {
+            const div = document.createElement('div');
+            div.className = "expectedExpense";
+            div.innerHTML =
+                `<div>
+                    <input type="checkbox" class="expectedCheckBox" name="expectedCheckBox" checked />
+                    <input type='text' placeholder='예상 지출 내용 입력' class="expectedContentInput">
+                    <input type='number' placeholder='예상 비용을 입력' class="expectedCostInput">
+                </div>`;
+            $expenseContent.appendChild(div);
+
+
+            const fixedExpenseInputs = div.querySelectorAll('.expectedCostInput');
+            fixedExpenseInputs.forEach(input => {
+                input.addEventListener('change', calculateTotalExpense);
+            });
+
+            const checkboxs = div.querySelectorAll('.expectedCheckBox');
+            checkboxs.forEach(checkbox => {
+                checkbox.addEventListener('change', calculateTotalExpense);
+            });
+
+        })
+    </script>
+
+</body>
+
+</html>
